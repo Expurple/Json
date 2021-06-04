@@ -19,3 +19,7 @@ NOTE: **This is an educational project, it's not intended for production use**.
 
 * build with `EXPURPLE_JSON_BUILD_TESTING` set to `ON`
 * run `build/tests/run-tests`
+
+## Licence
+
+This project is licensed under GPL-3.0, see the [LICENSE](LICENSE) file for details.
