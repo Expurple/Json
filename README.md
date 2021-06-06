@@ -4,6 +4,8 @@ An attempt to write an [nlohmann::json](https://github.com/nlohmann/json)-style 
 
 NOTE: **This is an educational project, it's not intended for production use**.
 
+It probably has bugs with encodings, escape characters, etc.
+
 ## Features:
 
 * optional debug errors on improper usage of std::move (`EXPURPLE_JSON_DEBUG_MOVE` flag)

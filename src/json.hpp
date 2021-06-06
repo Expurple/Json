@@ -1,8 +1,8 @@
 #ifndef EXPURPLE_JSON_JSON_HPP
 #define EXPURPLE_JSON_JSON_HPP
 
-#include <cstddef>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -15,6 +15,55 @@ namespace expurple {
 class Json
 {
 public:
+// types:
+
+    // Parsing options:
+    enum class DuplicateKeys : unsigned char
+    {
+        Ignore,
+        Check
+    };
+    enum class WhitespaceAfter : unsigned char
+    {
+        Ignore,
+        Check
+    };
+
+    // Exception types:
+    class ParseError : public std::invalid_argument
+    {
+    public:
+        explicit ParseError(const std::string& reason)
+            : std::invalid_argument(reason) {}
+        explicit ParseError(const std::string& reason, long long index)
+            : std::invalid_argument(reason + " at index " + std::to_string(index)) {}
+    };
+
+    class TypeError : public std::logic_error
+    {
+    public:
+        explicit TypeError(const std::string& msg) : std::logic_error(msg) {}
+    };
+
+    class KeyError : public std::invalid_argument
+    {
+    public:
+        explicit KeyError(const std::string& msg) : std::invalid_argument(msg) {}
+    };
+
+    class IndexError : public std::invalid_argument
+    {
+    public:
+        explicit IndexError(const std::string& msg) : std::invalid_argument(msg) {}
+    };
+
+    class MoveError : public std::logic_error
+    {
+    public:
+        explicit MoveError(const char* msg) : std::logic_error(msg) {}
+    };
+
+// constructors and destructor:
     Json();
     Json(const Json& other);
     Json(Json&& other);
@@ -33,19 +82,38 @@ public:
 
     ~Json() noexcept = default;
 
+// operators:
+
     Json& operator=(const Json& other);
     Json& operator=(Json&& other);
 
     friend bool operator==(const Json& left, const Json& right);
     friend bool operator!=(const Json& left, const Json& right);
 
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    class MoveError : public std::logic_error
-    {
-    public:
-        explicit MoveError(const char* msg) : std::logic_error(msg) {}
-    };
-#endif
+    Json& operator[](const std::string& key);
+    Json& operator[](size_t index);
+
+// methods:
+
+    static Json array();
+    static Json parse(const char* str,
+                      WhitespaceAfter wsafter = WhitespaceAfter::Check,
+                      DuplicateKeys dkeys = DuplicateKeys::Ignore);
+    static Json parse(const std::string& str,
+                      WhitespaceAfter wsafter = WhitespaceAfter::Check,
+                      DuplicateKeys dkeys = DuplicateKeys::Ignore);
+    static Json parse(std::istream& istream,
+                      WhitespaceAfter wsafter = WhitespaceAfter::Ignore,
+                      DuplicateKeys dkeys = DuplicateKeys::Ignore);
+
+    Json& at(const std::string& key);
+    Json& at(size_t index);
+    void push_back(const Json& val);
+
+    const std::string& getString() const;
+    size_t size() const;
+    std::set<std::string> keys() const;
+
 private:
 // types:
 
@@ -73,14 +141,14 @@ private:
     using Value = std::variant <std::nullptr_t, bool, double,
                                std::string, Array, Object, Moved>;
 
-// functions:
+// methods:
 
     Json(Array&& val);
     Json(Object&& val);
 
-    Array copy(const Array& array);
-    Object copy(const Object& object);
-    Json::Value copy(const Json& json);
+    static Array copy(const Array& array);
+    static Object copy(const Object& object);
+    static Json::Value copy(const Json& json);
 
     Type type() const;
 
@@ -92,7 +160,9 @@ private:
     Value value;
 };
 
-// todo: iostream operator overload, "|" operator overload
+std::istream& operator>>(std::istream& istream, Json& json);
+
+// todo: operator<< overload, operator| overload
 
 } // end of namespace "expurple"
 

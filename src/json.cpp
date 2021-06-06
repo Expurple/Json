@@ -2,6 +2,9 @@
 
 #include <assert.h>
 
+#include "parser.hpp"
+#include "util.hpp"
+
 namespace expurple {
 
 Json::Json()
@@ -80,6 +83,194 @@ Json& Json::operator=(Json&& other)
     value = std::move(other.value);
     other.value = Moved();
     return *this;
+}
+
+Json& Json::operator[](const std::string& key)
+{
+    if (this->type() != Type::Object)
+        // TODO: better message with exact type
+        throw TypeError("cannot index this with string: not an Object");
+
+    auto& map = std::get<Object>(value);
+    auto iter = map.find(key);
+    if (iter == map.end())
+    {
+        auto newNode = std::pair {key, new Json()};
+        iter = map.insert(newNode).first;
+    }
+    return *iter->second;
+}
+
+Json& Json::operator[](size_t index)
+{
+    if (this->type() != Type::Array)
+        // TODO: better message with exact type
+        throw TypeError("cannot index this with a number: not an Array");
+
+    size_t size = std::get<Array>(value).size();
+    if (index >= size)
+        throw IndexError("index " + std::to_string(index) + " is out of bounds"
+                         " (size is " + std::to_string(size) + ")");
+
+    return *std::get<Array>(value)[index];
+}
+
+Json Json::array()
+{
+    return Array();
+}
+
+Json Json::parse(const char* str, WhitespaceAfter wsafter, DuplicateKeys dkeys)
+{
+    std::istringstream stream(str);
+    Parser p(stream, wsafter, dkeys);
+    return p.parse();
+}
+
+Json Json::parse(const std::string& str, WhitespaceAfter wsafter, DuplicateKeys dkeys)
+{
+    std::istringstream stream(str);
+    Parser p(stream, wsafter, dkeys);
+    return p.parse();
+}
+
+Json Json::parse(std::istream &istream, WhitespaceAfter wsafter, DuplicateKeys dkeys)
+{
+    Parser p(istream, wsafter, dkeys);
+    return p.parse();
+}
+
+Json& Json::at(const std::string& key)
+{
+    switch (type()) {
+    case Type::Null:
+        throw TypeError("Can't call 'at()' on a Null value");
+    case Type::Bool:
+        throw TypeError("Can't call 'at()' on a Bool value");
+    case Type::Number:
+        throw TypeError("Can't call 'at()' on a Number value");
+    case Type::String:
+        throw TypeError("Can't call 'at()' on a String value."
+                        " Try to use 'json.getString().at()'");
+    case Type::Array:
+        throw TypeError("Can't call 'at(const std::string&)' on an Array value."
+                        " Try to use 'at(size_t)'");
+    case Type::Object:
+        try {
+            return *std::get<Object>(value).at(key); }
+        catch (const std::out_of_range&) {
+            throw KeyError("tried to access a non-existing property '"+ key + "'"); }
+    case Type::Moved:
+        throw MoveError("Tried use a moved-from Json object");
+    }
+    throw std::logic_error("Function must return inside switch");
+}
+
+Json& Json::at(size_t index)
+{
+    switch (type()) {
+    case Type::Null:
+        throw TypeError("Can't call 'at()' on a Null value");
+    case Type::Bool:
+        throw TypeError("Can't call 'at()' on a Bool value");
+    case Type::Number:
+        throw TypeError("Can't call 'at()' on a Number value");
+    case Type::String:
+        throw TypeError("Can't call 'at()' on a String value."
+                        " Try to use 'json.getString().at()'");
+    case Type::Array:
+        try {
+            return *std::get<Array>(value).at(index); }
+        catch (const std::out_of_range&) {
+            auto fmt = "tried to access value at index %u (size of Array is %u)";
+            throw IndexError(format(fmt, index, std::get<Array>(value).size())); }
+    case Type::Object:
+        throw TypeError("Can't call 'at(size_t)' on an Object value."
+                        " Try to use 'at(const std::string&)'");
+    case Type::Moved:
+        throw MoveError("Tried use a moved-from Json object");
+    }
+    throw std::logic_error("Function must return inside switch");
+}
+
+void Json::push_back(const Json& val)
+{
+    switch (type()) {
+    case Type::Null:
+        throw TypeError("Can't call 'push_back()' on a Null value");
+    case Type::Bool:
+        throw TypeError("Can't call 'push_back()' on a Bool value");
+    case Type::Number:
+        throw TypeError("Can't call 'push_back()' on a Number value");
+    case Type::String:
+        throw TypeError("Can't call 'push_back()' on a String value");
+    case Type::Array:
+        std::get<Array>(value).emplace_back(new Json(val));
+        return;
+    case Type::Object:
+        throw TypeError("Can't call 'push_back()' on an Object value");
+    case Type::Moved:
+        throw MoveError("Tried use a moved-from Json object");
+    }
+    throw std::logic_error("Function must return inside switch");
+}
+
+const std::string& Json::getString() const
+{
+    if (this->type() != Type::String)
+        // TODO: better message with exact type
+        throw TypeError("cannot get string from this: not a String");
+
+    return std::get<std::string>(value);
+}
+
+size_t Json::size() const
+{
+    switch (type()) {
+    case Type::Null:
+        throw TypeError("Can't call 'size()' on a Null value");
+    case Type::Bool:
+        throw TypeError("Can't call 'size()' on a Bool value");
+    case Type::Number:
+        throw TypeError("Can't call 'size()' on a Number value");
+    case Type::String:
+        return std::get<std::string>(value).size();
+    case Type::Array:
+        return std::get<Array>(value).size();
+    case Type::Object:
+        return std::get<Object>(value).size();
+    case Type::Moved:
+#ifdef EXPURPLE_JSON_DEBUG_MOVE
+        throw MoveError("Tried use a moved-from Json object");
+#else
+        return 0;
+#endif
+    }
+    throw std::logic_error("Function must return inside switch");
+}
+
+std::set<std::string> Json::keys() const
+{
+    switch (type()) {
+    case Type::Null:
+        throw TypeError("Can't call 'keys()' on a Null value");
+    case Type::Bool:
+        throw TypeError("Can't call 'keys()' on a Bool value");
+    case Type::Number:
+        throw TypeError("Can't call 'keys()' on a Number value");
+    case Type::String:
+        throw TypeError("Can't call 'keys()' on a String value");
+    case Type::Array:
+        throw TypeError("Can't call 'keys()' on an Array value");
+    case Type::Object: {
+        std::set<std::string> keys;
+        for (const auto& [key, value] : std::get<Object>(value))
+            keys.insert(key);
+        return keys; }
+    case Type::Moved:
+        throw MoveError("Tried use a moved-from Json object");
+    }
+    throw std::logic_error("Function must return inside switch");
 }
 
 Json::Array Json::copy(const Array& array)
@@ -197,6 +388,15 @@ bool operator==(const Json& left, const Json& right)
 bool operator!=(const Json& left, const Json& right)
 {
     return !(left == right);
+}
+
+std::istream& operator>>(std::istream& istream, Json& json)
+{
+    Parser p(istream,
+             Json::WhitespaceAfter::Ignore, // both are possible to change in
+             Json::DuplicateKeys::Ignore);  // Json::parse(std::istream&), if need to
+    json = p.parse();
+    return istream;
 }
 
 } // end of namespace "expurple"
