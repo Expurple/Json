@@ -69,9 +69,11 @@ Json& Json::operator=(Json&& other)
 
 Json& Json::operator[](const std::string& key)
 {
-    if (this->type() != Type::Object)
-        // TODO: better message with exact type
-        throw TypeError("cannot index this with string: not an Object");
+    if (type() != Type::Object)
+    {
+        auto fmt = "Can't index %s with std::string: not an Object";
+        throw typeError(fmt, type());
+    }
 
     auto& map = std::get<Object>(value);
     auto iter = map.find(key);
@@ -85,14 +87,15 @@ Json& Json::operator[](const std::string& key)
 
 Json& Json::operator[](size_t index)
 {
-    if (this->type() != Type::Array)
-        // TODO: better message with exact type
-        throw TypeError("cannot index this with a number: not an Array");
+    if (type() != Type::Array)
+        throw typeError("Can't index %s with a number: not an Array", type());
 
     size_t size = std::get<Array>(value).size();
     if (index >= size)
-        throw IndexError("index " + std::to_string(index) + " is out of bounds"
-                         " (size is " + std::to_string(size) + ")");
+    {
+        auto fmt = "Index %u is out of bounds (size of Array is %u)";
+        throw IndexError(format(fmt, index, size));
+    }
 
     return *std::get<Array>(value)[index];
 }
@@ -126,11 +129,9 @@ Json& Json::at(const std::string& key)
 {
     switch (type()) {
     case Type::Null:
-        throw TypeError("Can't call 'at()' on a Null value");
     case Type::Bool:
-        throw TypeError("Can't call 'at()' on a Bool value");
     case Type::Number:
-        throw TypeError("Can't call 'at()' on a Number value");
+        throw typeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
                         " Try to use 'json.getString().at()'");
@@ -141,7 +142,7 @@ Json& Json::at(const std::string& key)
         try {
             return *std::get<Object>(value).at(key); }
         catch (const std::out_of_range&) {
-            throw KeyError("tried to access a non-existing property '"+ key + "'"); }
+            throw KeyError("Tried to access a non-existing property '"+ key + "'"); }
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -150,20 +151,14 @@ Json& Json::at(size_t index)
 {
     switch (type()) {
     case Type::Null:
-        throw TypeError("Can't call 'at()' on a Null value");
     case Type::Bool:
-        throw TypeError("Can't call 'at()' on a Bool value");
     case Type::Number:
-        throw TypeError("Can't call 'at()' on a Number value");
+        throw typeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
                         " Try to use 'json.getString().at()'");
     case Type::Array:
-        try {
-            return *std::get<Array>(value).at(index); }
-        catch (const std::out_of_range&) {
-            auto fmt = "tried to access value at index %u (size of Array is %u)";
-            throw IndexError(format(fmt, index, std::get<Array>(value).size())); }
+        return (*this)[index]; // operator[](size_t) does bound checking too
     case Type::Object:
         throw TypeError("Can't call 'at(size_t)' on an Object value."
                         " Try to use 'at(const std::string&)'");
@@ -173,29 +168,19 @@ Json& Json::at(size_t index)
 
 void Json::push_back(const Json& val)
 {
-    switch (type()) {
-    case Type::Null:
-        throw TypeError("Can't call 'push_back()' on a Null value");
-    case Type::Bool:
-        throw TypeError("Can't call 'push_back()' on a Bool value");
-    case Type::Number:
-        throw TypeError("Can't call 'push_back()' on a Number value");
-    case Type::String:
-        throw TypeError("Can't call 'push_back()' on a String value");
-    case Type::Array:
-        std::get<Array>(value).emplace_back(new Json(val));
-        return;
-    case Type::Object:
-        throw TypeError("Can't call 'push_back()' on an Object value");
+    if (type() != Type::Array)
+    {
+        auto fmt = "Can't call 'push_back()' on a %s value: not an Array";
+        throw typeError(fmt, type());
     }
-    throw std::logic_error("Function must return inside switch");
+
+    std::get<Array>(value).emplace_back(new Json(val));
 }
 
 const std::string& Json::getString() const
 {
-    if (this->type() != Type::String)
-        // TODO: better message with exact type
-        throw TypeError("cannot get string from this: not a String");
+    if (type() != Type::String)
+        throw typeError("Can't get string from %s: not a String", type());
 
     return std::get<std::string>(value);
 }
@@ -204,11 +189,9 @@ size_t Json::size() const
 {
     switch (type()) {
     case Type::Null:
-        throw TypeError("Can't call 'size()' on a Null value");
     case Type::Bool:
-        throw TypeError("Can't call 'size()' on a Bool value");
     case Type::Number:
-        throw TypeError("Can't call 'size()' on a Number value");
+        throw typeError("Can't call 'size()' on a %s value", type());
     case Type::String:
         return std::get<std::string>(value).size();
     case Type::Array:
@@ -221,24 +204,13 @@ size_t Json::size() const
 
 std::set<std::string> Json::keys() const
 {
-    switch (type()) {
-    case Type::Null:
-        throw TypeError("Can't call 'keys()' on a Null value");
-    case Type::Bool:
-        throw TypeError("Can't call 'keys()' on a Bool value");
-    case Type::Number:
-        throw TypeError("Can't call 'keys()' on a Number value");
-    case Type::String:
-        throw TypeError("Can't call 'keys()' on a String value");
-    case Type::Array:
-        throw TypeError("Can't call 'keys()' on an Array value");
-    case Type::Object: {
-        std::set<std::string> keys;
-        for (const auto& [key, value] : std::get<Object>(value))
-            keys.insert(key);
-        return keys; }
-    }
-    throw std::logic_error("Function must return inside switch");
+    if (type() != Type::Object)
+        throw typeError("Can't call 'keys()' on a %s value: not an Object", type());
+
+    std::set<std::string> keys;
+    for (const auto& [key, value] : std::get<Object>(value))
+        keys.insert(key);
+    return keys;
 }
 
 Json::Array Json::copy(const Array& array)

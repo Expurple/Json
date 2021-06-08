@@ -138,6 +138,9 @@ private:
     static Json::Value copy(const Json& json);
 
     Type type() const;
+    // defined in "util.cpp"
+    // TODO: find a way make it a TypeError constructor
+    friend TypeError typeError(const char* fmt, Type thisType);
 
     static bool areEqual(const Array& left, const Array& right);
     static bool areEqual(const Object& left, const Object& right);
