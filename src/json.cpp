@@ -15,21 +15,12 @@ Json::Json()
 
 Json::Json(const Json& other)
 {
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    if (other.type() == Type::Moved)
-        throw MoveError("Tried to copy a moved-from Json object");
-#endif
     value = copy(other);
 }
 
 Json::Json(Json&& other)
 {
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    if (other.type() == Type::Moved)
-        throw MoveError("Tried to move a moved-from Json object twice");
-#endif
     value = std::move(other.value);
-    other.value = Moved();
 }
 
 Json::Json(std::nullptr_t) noexcept
@@ -64,10 +55,6 @@ Json::Json(Object&& val)
 
 Json& Json::operator=(const Json& other)
 {
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    if (other.type() == Type::Moved)
-        throw MoveError("Tried to copy a moved-from Json object");
-#endif
     if (&other != this)
         value = copy(other);
     return *this;
@@ -75,13 +62,8 @@ Json& Json::operator=(const Json& other)
 
 Json& Json::operator=(Json&& other)
 {
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    if (other.type() == Type::Moved)
-        throw MoveError("Tried to move a moved-from Json object twice");
-#endif
     assert(&other != this);
     value = std::move(other.value);
-    other.value = Moved();
     return *this;
 }
 
@@ -160,8 +142,6 @@ Json& Json::at(const std::string& key)
             return *std::get<Object>(value).at(key); }
         catch (const std::out_of_range&) {
             throw KeyError("tried to access a non-existing property '"+ key + "'"); }
-    case Type::Moved:
-        throw MoveError("Tried use a moved-from Json object");
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -187,8 +167,6 @@ Json& Json::at(size_t index)
     case Type::Object:
         throw TypeError("Can't call 'at(size_t)' on an Object value."
                         " Try to use 'at(const std::string&)'");
-    case Type::Moved:
-        throw MoveError("Tried use a moved-from Json object");
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -209,8 +187,6 @@ void Json::push_back(const Json& val)
         return;
     case Type::Object:
         throw TypeError("Can't call 'push_back()' on an Object value");
-    case Type::Moved:
-        throw MoveError("Tried use a moved-from Json object");
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -239,12 +215,6 @@ size_t Json::size() const
         return std::get<Array>(value).size();
     case Type::Object:
         return std::get<Object>(value).size();
-    case Type::Moved:
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-        throw MoveError("Tried use a moved-from Json object");
-#else
-        return 0;
-#endif
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -267,8 +237,6 @@ std::set<std::string> Json::keys() const
         for (const auto& [key, value] : std::get<Object>(value))
             keys.insert(key);
         return keys; }
-    case Type::Moved:
-        throw MoveError("Tried use a moved-from Json object");
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -309,12 +277,6 @@ Json::Value Json::copy(const Json& json)
     case Type::Object: {
         const auto& objectValue = std::get<Object>(json.value);
         return std::move(copy(objectValue)); }
-    case Type::Moved:
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-        throw MoveError("Tried to copy a moved-from Json object");
-#else
-        return Moved();
-#endif
     }
     throw std::logic_error("Function must return inside switch");
 }
@@ -355,10 +317,7 @@ bool Json::areEqual(const Json::Object& left, const Json::Object& right)
 bool operator==(const Json& left, const Json& right)
 {
     using Type = Json::Type;
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-    if (right.type() == Type::Moved || left.type() == Type::Moved)
-        throw Json::MoveError("Tried to use a moved-from Json object");
-#endif
+
     if (left.type() != right.type())
         return false;
 
@@ -375,12 +334,6 @@ bool operator==(const Json& left, const Json& right)
     case Type::Object:
         return Json::areEqual(std::get<Json::Object>(left.value),
                         std::get<Json::Object>(right.value));
-    case Type::Moved:
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-        throw std::logic_error("Should be already checked before switch");
-#else
-        return true;
-#endif
     }
     throw std::logic_error("Function must return earlier");
 }

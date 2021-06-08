@@ -21,15 +21,6 @@ TEST_CASE("test Json class") {
             CHECK_NE(Json(0), Json::array());
             CHECK_NE(Json(), Json::array());
         }
-#ifdef EXPURPLE_JSON_DEBUG_MOVE
-        SUBCASE("assignment or comparison of moved-from Jsons should fail in debug") {
-            Json moved = "some value to pass";
-            Json alive = std::move(moved);
-            CHECK_THROWS_AS(alive == moved,           Json::MoveError);
-            CHECK_THROWS_AS(alive = moved,            Json::MoveError);
-            CHECK_THROWS_AS(alive = std::move(moved), Json::MoveError);
-        }
-#endif
     }
     SUBCASE("Json::at() should fail on out-of-bounds access") {
         CHECK_THROWS_AS(Json().at("non existing key"), Json::KeyError);

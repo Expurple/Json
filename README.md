@@ -8,7 +8,8 @@ It probably has bugs with encodings, escape characters, etc.
 
 ## Features:
 
-* optional debug errors on improper usage of std::move (`EXPURPLE_JSON_DEBUG_MOVE` flag)
+* parsing from strings and `std::istream`s
+    * optional errors on duplicate keys
 
 ## How to build
 

@@ -57,12 +57,6 @@ public:
         explicit IndexError(const std::string& msg) : std::invalid_argument(msg) {}
     };
 
-    class MoveError : public std::logic_error
-    {
-    public:
-        explicit MoveError(const char* msg) : std::logic_error(msg) {}
-    };
-
 // constructors and destructor:
     Json();
     Json(const Json& other);
@@ -124,13 +118,7 @@ private:
         Number = 2,
         String = 3,
         Array = 4,
-        Object = 5,
-        Moved = 6 // special invalid state after being moved-from
-    };
-
-    struct Moved // a placeholder type for std::variant
-    {
-        constexpr bool operator==(const Moved) const noexcept { return true; }
+        Object = 5
     };
 
     // All these types CAN'T BE DIRECTLY COPIED because of std::unique_ptr!
@@ -138,8 +126,7 @@ private:
     using JsonPtr = std::unique_ptr<Json>;
     using Array = std::vector<JsonPtr>;
     using Object = std::unordered_map<std::string, JsonPtr>;
-    using Value = std::variant <std::nullptr_t, bool, double,
-                               std::string, Array, Object, Moved>;
+    using Value = std::variant <std::nullptr_t, bool, double, std::string, Array, Object>;
 
 // methods:
 
