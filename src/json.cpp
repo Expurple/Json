@@ -1,6 +1,6 @@
 #include "json.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 #include "parser.hpp"
 #include "util.hpp"
@@ -37,6 +37,18 @@ Json::Json(bool val) noexcept
 
 Json::Json(const char *val)
     : value(std::string(val))
+{
+
+}
+
+Json::Json(const std::string& val)
+    : value(val)
+{
+
+}
+
+Json::Json(std::string&& val)
+    : value(val)
 {
 
 }
@@ -107,6 +119,8 @@ Json Json::array()
 
 Json Json::parse(const char* str, WhitespaceAfter wsafter, DuplicateKeys dkeys)
 {
+    assert(str != nullptr);
+
     std::istringstream stream(str);
     Parser p(stream, wsafter, dkeys);
     return p.parse();

@@ -120,7 +120,7 @@ Json Parser::parseString()
         }
     }
     parseLiteral('"');
-    return Json(buf.c_str());
+    return Json(std::move(buf));
 }
 
 Json Parser::parseArray()
@@ -215,21 +215,13 @@ char Parser::parseOneOf(char first, char second)
 
 void Parser::skipWhitespace()
 {
-    while (true)
-    {
-        checkForBadChar();
-        if (!isspace(stream.peek()))
-            break;
+    while (isspace(peekChar()))
         stream.get();
-    }
 }
 
 void Parser::checkWhitespaceUntilEnd()
 {
-    if (stream.eof())
-        return;
-
-    for (char ch = stream.peek(); ch != '\0' && ch != EOF; ch = stream.get())
+    for (char ch = stream.get(); !stream.eof(); ch = stream.get())
     {
         if (!isspace(ch))
         {
@@ -271,7 +263,7 @@ void Parser::checkForBadChar()
         throw ParseError("unexpected null-terminator", currentIndex() + 1);
     if (ch == EOF)
         throw ParseError("unexpected EOF", currentIndex() + 1);
-    if (ch < 0x0020 && !isspace(ch))
+    if (ch < 0x20 && !isspace(ch))
     {
         auto charCode = (unsigned char)ch;
         auto message = format("unexpected special character (char code %u)", charCode);

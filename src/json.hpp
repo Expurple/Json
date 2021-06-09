@@ -65,6 +65,7 @@ public:
     Json(bool val) noexcept;
     Json(const char* val);
     Json(const std::string& val);
+    Json(std::string&& val);
 
     template<typename NumericT>
     Json(NumericT val) noexcept
