@@ -17,6 +17,17 @@ class Json
 public:
 // types:
 
+    // Possible value types, as returned by type()
+    enum class Type
+    {
+        Null = 0,
+        Bool = 1,
+        Number = 2,
+        String = 3,
+        Array = 4,
+        Object = 5
+    };
+
     // Parsing options:
     enum class DuplicateKeys : unsigned char
     {
@@ -43,6 +54,7 @@ public:
     {
     public:
         explicit TypeError(const std::string& msg) : std::logic_error(msg) {}
+        explicit TypeError(const char* fmt, Type thisType); // defined in json.cpp
     };
 
     class KeyError : public std::invalid_argument
@@ -109,22 +121,14 @@ public:
     double getNumber() const;
     const std::string& getString() const;
 
+    Type type() const noexcept;
     bool isNull() const noexcept;
+
     size_t size() const;
     std::set<std::string> keys() const;
 
 private:
 // types:
-
-    enum class Type
-    {
-        Null = 0,
-        Bool = 1,
-        Number = 2,
-        String = 3,
-        Array = 4,
-        Object = 5
-    };
 
     // All these types CAN'T BE DIRECTLY COPIED because of std::unique_ptr!
     // std::unique_ptr is used because can't store incomplete type Json by value.
@@ -141,12 +145,6 @@ private:
     static Array copy(const Array& array);
     static Object copy(const Object& object);
     static Value copy(const Json& json);
-
-    Type type() const noexcept;
-
-    // defined in "util.cpp"
-    // TODO: find a way to make it a TypeError constructor
-    friend TypeError typeError(const char* fmt, Type thisType);
 
     static bool areEqual(const Array& left, const Array& right);
     static bool areEqual(const Object& left, const Object& right);

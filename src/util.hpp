@@ -2,7 +2,8 @@
 #define EXPURPLE_JSON_UTIL_HPP
 
 #include <cstdio>
-#include <string>
+
+#include "json.hpp"
 
 namespace expurple
 {
@@ -19,5 +20,7 @@ std::string format(const char* fmt, const Args&... args)
 }
 
 } // end of namespace "expurple"
+
+const char* toString(expurple::Json::Type type);
 
 #endif // EXPURPLE_JSON_UTIL_HPP

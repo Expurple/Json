@@ -1,11 +1,20 @@
 #include "json.hpp"
 
 #include <cassert>
+#include <cstring>
 
 #include "parser.hpp"
 #include "util.hpp"
 
 namespace expurple {
+
+Json::TypeError::TypeError(const char* fmt, Json::Type thisType)
+    : std::logic_error(format(fmt, toString(thisType)))
+{
+    assert(strstr(fmt, "%s") != nullptr);
+}
+
+
 
 Json::Json()
     : value(Object())
@@ -84,7 +93,7 @@ Json& Json::operator[](const std::string& key)
     if (type() != Type::Object)
     {
         auto fmt = "Can't index %s with std::string: not an Object";
-        throw typeError(fmt, type());
+        throw TypeError(fmt, type());
     }
 
     auto& map = std::get<Object>(value);
@@ -100,7 +109,7 @@ Json& Json::operator[](const std::string& key)
 Json& Json::operator[](size_t index)
 {
     if (type() != Type::Array)
-        throw typeError("Can't index %s with a number: not an Array", type());
+        throw TypeError("Can't index %s with a number: not an Array", type());
 
     size_t size = std::get<Array>(value).size();
     if (index >= size)
@@ -145,7 +154,7 @@ Json& Json::at(const std::string& key)
     case Type::Null:
     case Type::Bool:
     case Type::Number:
-        throw typeError("Can't call 'at()' on a %s value", type());
+        throw TypeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
                         " Try to use 'json.getString().at()'");
@@ -158,7 +167,7 @@ Json& Json::at(const std::string& key)
         catch (const std::out_of_range&) {
             throw KeyError("Tried to access a non-existing property '"+ key + "'"); }
     }
-    throw std::logic_error("Function must return inside switch");
+    assert(false); // function must return inside of switch statement
 }
 
 Json& Json::at(size_t index)
@@ -167,7 +176,7 @@ Json& Json::at(size_t index)
     case Type::Null:
     case Type::Bool:
     case Type::Number:
-        throw typeError("Can't call 'at()' on a %s value", type());
+        throw TypeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
                         " Try to use 'json.getString().at()'");
@@ -177,7 +186,7 @@ Json& Json::at(size_t index)
         throw TypeError("Can't call 'at(size_t)' on an Object value."
                         " Try to use 'at(const std::string&)'");
     }
-    throw std::logic_error("Function must return inside switch");
+    assert(false); // function must return inside of switch statement
 }
 
 void Json::push_back(const Json& val)
@@ -185,7 +194,7 @@ void Json::push_back(const Json& val)
     if (type() != Type::Array)
     {
         auto fmt = "Can't call 'push_back()' on a %s value: not an Array";
-        throw typeError(fmt, type());
+        throw TypeError(fmt, type());
     }
 
     std::get<Array>(value).emplace_back(new Json(val));
@@ -196,7 +205,7 @@ bool Json::getBool() const
     if (type() != Type::Bool)
     {
         auto fmt = "Can't call 'getBool()' on a %s value: not a Bool";
-        throw typeError(fmt, type());
+        throw TypeError(fmt, type());
     }
 
     return std::get<bool>(value);
@@ -207,7 +216,7 @@ double Json::getNumber() const
     if (type() != Type::Number)
     {
         auto fmt = "Can't call 'getNumber()' on a %s value: not a Number";
-        throw typeError(fmt, type());
+        throw TypeError(fmt, type());
     }
 
     return std::get<double>(value);
@@ -216,7 +225,7 @@ double Json::getNumber() const
 const std::string& Json::getString() const
 {
     if (type() != Type::String)
-        throw typeError("Can't get string from %s: not a String", type());
+        throw TypeError("Can't get string from %s: not a String", type());
 
     return std::get<std::string>(value);
 }
@@ -232,7 +241,7 @@ size_t Json::size() const
     case Type::Null:
     case Type::Bool:
     case Type::Number:
-        throw typeError("Can't call 'size()' on a %s value", type());
+        throw TypeError("Can't call 'size()' on a %s value", type());
     case Type::String:
         return std::get<std::string>(value).size();
     case Type::Array:
@@ -240,13 +249,13 @@ size_t Json::size() const
     case Type::Object:
         return std::get<Object>(value).size();
     }
-    throw std::logic_error("Function must return inside switch");
+    assert(false); // function must return inside of switch statement
 }
 
 std::set<std::string> Json::keys() const
 {
     if (type() != Type::Object)
-        throw typeError("Can't call 'keys()' on a %s value: not an Object", type());
+        throw TypeError("Can't call 'keys()' on a %s value: not an Object", type());
 
     std::set<std::string> keys;
     for (const auto& [key, value] : std::get<Object>(value))
@@ -291,7 +300,7 @@ Json::Value Json::copy(const Json& json)
         const auto& objectValue = std::get<Object>(json.value);
         return std::move(copy(objectValue)); }
     }
-    throw std::logic_error("Function must return inside switch");
+    assert(false); // function must return inside of switch statement
 }
 
 Json::Type Json::type() const noexcept
@@ -348,7 +357,7 @@ bool operator==(const Json& left, const Json& right)
         return Json::areEqual(std::get<Json::Object>(left.value),
                         std::get<Json::Object>(right.value));
     }
-    throw std::logic_error("Function must return earlier");
+    assert(false); // function must return inside of switch statement or earlier
 }
 
 bool operator!=(const Json& left, const Json& right)

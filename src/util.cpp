@@ -1,29 +1,18 @@
 #include "util.hpp"
 
 #include <cassert>
-#include <cstring>
 
-#include "json.hpp"
+using Type = expurple::Json::Type;
 
-namespace expurple {
-
-// declated in class Json as friend
-Json::TypeError typeError(const char* fmt, Json::Type thisType)
+const char* toString(Type type)
 {
-    assert(strstr(fmt, "%s") != nullptr);
-
-    using Type = Json::Type;
-    const char* typeStr;
-    switch (thisType) {
-    case Type::Null:   typeStr = "Null";   break;
-    case Type::Bool:   typeStr = "Bool";   break;
-    case Type::Number: typeStr = "Nubmer"; break;
-    case Type::String: typeStr = "String"; break;
-    case Type::Array:  typeStr = "Array";  break;
-    case Type::Object: typeStr = "Object"; break;
+    switch (type) {
+    case Type::Null:   return "Null";
+    case Type::Bool:   return "Bool";
+    case Type::Number: return "Number";
+    case Type::String: return "String";
+    case Type::Array:  return "Array";
+    case Type::Object: return "Object";
     }
-    std::string msg = format(fmt, typeStr);
-    return Json::TypeError(msg);
+    assert(false); // function must return inside of switch statement
 }
-
-} // end of namespace "expurple"
