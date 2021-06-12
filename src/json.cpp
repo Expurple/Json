@@ -47,13 +47,13 @@ Json::Json(const std::string& val)
 
 }
 
-Json::Json(std::string&& val)
+Json::Json(std::string&& val) noexcept
     : value(val)
 {
 
 }
 
-Json::Json(Array&& val)
+Json::Json(Array&& val) noexcept
     : value(std::move(val))
 {
 
@@ -191,12 +191,39 @@ void Json::push_back(const Json& val)
     std::get<Array>(value).emplace_back(new Json(val));
 }
 
+bool Json::getBool() const
+{
+    if (type() != Type::Bool)
+    {
+        auto fmt = "Can't call 'getBool()' on a %s value: not a Bool";
+        throw typeError(fmt, type());
+    }
+
+    return std::get<bool>(value);
+}
+
+double Json::getNumber() const
+{
+    if (type() != Type::Number)
+    {
+        auto fmt = "Can't call 'getNumber()' on a %s value: not a Number";
+        throw typeError(fmt, type());
+    }
+
+    return std::get<double>(value);
+}
+
 const std::string& Json::getString() const
 {
     if (type() != Type::String)
         throw typeError("Can't get string from %s: not a String", type());
 
     return std::get<std::string>(value);
+}
+
+bool Json::isNull() const noexcept
+{
+    return type() == Type::Null;
 }
 
 size_t Json::size() const
@@ -267,7 +294,7 @@ Json::Value Json::copy(const Json& json)
     throw std::logic_error("Function must return inside switch");
 }
 
-Json::Type Json::type() const
+Json::Type Json::type() const noexcept
 {
     // IMPORTANT: relies on enum values and std::variant indexes being in the same order
     return static_cast<Type>(value.index());

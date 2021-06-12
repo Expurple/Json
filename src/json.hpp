@@ -65,7 +65,7 @@ public:
     Json(bool val) noexcept;
     Json(const char* val);
     Json(const std::string& val);
-    Json(std::string&& val);
+    Json(std::string&& val) noexcept;
 
     template<typename NumericT>
     Json(NumericT val) noexcept
@@ -105,7 +105,11 @@ public:
     Json& at(size_t index);
     void push_back(const Json& val);
 
+    bool getBool() const;
+    double getNumber() const;
     const std::string& getString() const;
+
+    bool isNull() const noexcept;
     size_t size() const;
     std::set<std::string> keys() const;
 
@@ -131,16 +135,17 @@ private:
 
 // methods:
 
-    Json(Array&& val);
+    Json(Array&& val) noexcept;
     Json(Object&& val);
 
     static Array copy(const Array& array);
     static Object copy(const Object& object);
-    static Json::Value copy(const Json& json);
+    static Value copy(const Json& json);
 
-    Type type() const;
+    Type type() const noexcept;
+
     // defined in "util.cpp"
-    // TODO: find a way make it a TypeError constructor
+    // TODO: find a way to make it a TypeError constructor
     friend TypeError typeError(const char* fmt, Type thisType);
 
     static bool areEqual(const Array& left, const Array& right);
