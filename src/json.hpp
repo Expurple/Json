@@ -1,6 +1,7 @@
 #ifndef EXPURPLE_JSON_JSON_HPP
 #define EXPURPLE_JSON_JSON_HPP
 
+#include <map>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -8,7 +9,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-#include <unordered_map>
 
 namespace expurple {
 
@@ -38,6 +38,14 @@ public:
     {
         Ignore,
         Check
+    };
+
+    // Dump options:
+    enum class Whitespace : unsigned char
+    {
+        None,
+        Space,
+        NewlineAndTab
     };
 
     // Exception types:
@@ -100,6 +108,8 @@ public:
     Json& operator[](const std::string& key);
     Json& operator[](size_t index);
 
+    const Json& operator[](size_t index) const;
+
 // methods:
 
     static Json array();
@@ -117,6 +127,9 @@ public:
     Json& at(size_t index);
     void push_back(const Json& val);
 
+    const Json& at(const std::string& key) const;
+    const Json& at(size_t index) const;
+
     bool getBool() const;
     double getNumber() const;
     const std::string& getString() const;
@@ -127,6 +140,9 @@ public:
     size_t size() const;
     std::set<std::string> keys() const;
 
+    std::string toString(Whitespace ws = Whitespace::None) const;
+    void writeTo(std::ostream& ostream, Whitespace ws = Whitespace::None) const;
+
 private:
 // types:
 
@@ -134,7 +150,7 @@ private:
     // std::unique_ptr is used because can't store incomplete type Json by value.
     using JsonPtr = std::unique_ptr<Json>;
     using Array = std::vector<JsonPtr>;
-    using Object = std::unordered_map<std::string, JsonPtr>;
+    using Object = std::map<std::string, JsonPtr>;
     using Value = std::variant <std::nullptr_t, bool, double, std::string, Array, Object>;
 
 // methods:
@@ -155,8 +171,9 @@ private:
 };
 
 std::istream& operator>>(std::istream& istream, Json& json);
+std::ostream& operator<<(std::ostream& ostream, const Json& json);
 
-// todo: operator<< overload, operator| overload
+// todo: operator| overload
 
 } // end of namespace "expurple"
 

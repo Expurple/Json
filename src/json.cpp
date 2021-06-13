@@ -3,13 +3,14 @@
 #include <cassert>
 #include <cstring>
 
+#include "dumper.hpp"
 #include "parser.hpp"
 #include "util.hpp"
 
 namespace expurple {
 
 Json::TypeError::TypeError(const char* fmt, Json::Type thisType)
-    : std::logic_error(format(fmt, toString(thisType)))
+    : std::logic_error(format(fmt, expurple::toString(thisType)))
 {
     assert(strstr(fmt, "%s") != nullptr);
 }
@@ -108,6 +109,11 @@ Json& Json::operator[](const std::string& key)
 
 Json& Json::operator[](size_t index)
 {
+    return const_cast<Json&>((*const_cast<const Json*>(this))[index]);
+}
+
+const Json& Json::operator[](size_t index) const
+{
     if (type() != Type::Array)
         throw TypeError("Can't index %s with a number: not an Array", type());
 
@@ -150,6 +156,27 @@ Json Json::parse(std::istream &istream, WhitespaceAfter wsafter, DuplicateKeys d
 
 Json& Json::at(const std::string& key)
 {
+    return const_cast<Json&>(const_cast<const Json*>(this)->at(key));
+}
+
+Json& Json::at(size_t index)
+{
+    return const_cast<Json&>(const_cast<const Json*>(this)->at(index));
+}
+
+void Json::push_back(const Json& val)
+{
+    if (type() != Type::Array)
+    {
+        auto fmt = "Can't call 'push_back()' on a %s value: not an Array";
+        throw TypeError(fmt, type());
+    }
+
+    std::get<Array>(value).emplace_back(new Json(val));
+}
+
+const Json& Json::at(const std::string& key) const
+{
     switch (type()) {
     case Type::Null:
     case Type::Bool:
@@ -170,7 +197,7 @@ Json& Json::at(const std::string& key)
     assert(false); // function must return inside of switch statement
 }
 
-Json& Json::at(size_t index)
+const Json& Json::at(size_t index) const
 {
     switch (type()) {
     case Type::Null:
@@ -187,17 +214,6 @@ Json& Json::at(size_t index)
                         " Try to use 'at(const std::string&)'");
     }
     assert(false); // function must return inside of switch statement
-}
-
-void Json::push_back(const Json& val)
-{
-    if (type() != Type::Array)
-    {
-        auto fmt = "Can't call 'push_back()' on a %s value: not an Array";
-        throw TypeError(fmt, type());
-    }
-
-    std::get<Array>(value).emplace_back(new Json(val));
 }
 
 bool Json::getBool() const
@@ -263,6 +279,17 @@ std::set<std::string> Json::keys() const
     return keys;
 }
 
+std::string Json::toString(Whitespace ws) const
+{
+    Dumper d(ws);
+    return d.dump(*this);
+}
+
+void Json::writeTo(std::ostream& ostream, Whitespace ws) const
+{
+    ostream << this->toString(ws);
+}
+
 Json::Array Json::copy(const Array& array)
 {
     Array copy;
@@ -275,7 +302,6 @@ Json::Array Json::copy(const Array& array)
 Json::Object Json::copy(const Object& object)
 {
     Object copy;
-    copy.reserve(object.size());
     for (const auto& [key, val] : object)
         copy.emplace(key, new Json(*val));
     return copy;
@@ -372,6 +398,13 @@ std::istream& operator>>(std::istream& istream, Json& json)
              Json::DuplicateKeys::Ignore);  // Json::parse(std::istream&), if need to
     json = p.parse();
     return istream;
+}
+
+std::ostream& operator<<(std::ostream& ostream, const Json& json)
+{
+    // ws is set to Whitespace::None by default,
+    // but it can be changed by using Json::writeTo(std::ostream&)
+    return (ostream << json.toString());
 }
 
 } // end of namespace "expurple"

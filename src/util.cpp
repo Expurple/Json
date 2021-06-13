@@ -2,7 +2,9 @@
 
 #include <cassert>
 
-using Type = expurple::Json::Type;
+namespace expurple {
+
+using Type = Json::Type;
 
 const char* toString(Type type)
 {
@@ -16,3 +18,5 @@ const char* toString(Type type)
     }
     assert(false); // function must return inside of switch statement
 }
+
+} // end of namespace "expurple"

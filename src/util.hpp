@@ -19,8 +19,8 @@ std::string format(const char* fmt, const Args&... args)
     return buf;
 }
 
-} // end of namespace "expurple"
-
 const char* toString(expurple::Json::Type type);
+
+} // end of namespace "expurple"
 
 #endif // EXPURPLE_JSON_UTIL_HPP
