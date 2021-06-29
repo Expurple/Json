@@ -83,6 +83,7 @@ public:
     Json();
     Json(const Json& other);
     Json(Json&& other);
+    Json(std::nullptr_t) noexcept;
     Json(bool val) noexcept;
     Json(const char* val);
     Json(const std::string& val);
@@ -120,7 +121,6 @@ public:
 
 // methods:
 
-    static Json null();
     static Json array();
     static Json parse(const char* str,
                       WhitespaceAfter wsafter = WhitespaceAfter::Check,
