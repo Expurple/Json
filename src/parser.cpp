@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <sstream>
 #include <iostream>
@@ -85,12 +86,15 @@ Json Parser::parseBool()
 
 Json Parser::parseNumber()
 {
-    // KISS, lol
+    // KISS, lol. Let the std::istream do the job.
     long long indexAtNumber = currentIndex() + 1;
     double number;
     if (!(stream >> number))
         throw ParseError("attempted to parse a number and failed", indexAtNumber);
-    return Json(number);
+    if (trunc(number) == number)
+        return Json(static_cast<int64_t>(number));
+    else
+        return Json(number);
 }
 
 Json Parser::parseString()

@@ -11,7 +11,8 @@ const char* toString(Type type)
     switch (type) {
     case Type::Null:   return "Null";
     case Type::Bool:   return "Bool";
-    case Type::Number: return "Number";
+    case Type::Int:    return "Int";
+    case Type::Double: return "Double";
     case Type::String: return "String";
     case Type::Array:  return "Array";
     case Type::Object: return "Object";

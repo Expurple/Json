@@ -181,7 +181,8 @@ const Json& Json::at(const std::string& key) const
     switch (type()) {
     case Type::Null:
     case Type::Bool:
-    case Type::Number:
+    case Type::Int:
+    case Type::Double:
         throw TypeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
@@ -203,7 +204,8 @@ const Json& Json::at(size_t index) const
     switch (type()) {
     case Type::Null:
     case Type::Bool:
-    case Type::Number:
+    case Type::Int:
+    case Type::Double:
         throw TypeError("Can't call 'at()' on a %s value", type());
     case Type::String:
         throw TypeError("Can't call 'at()' on a String value."
@@ -228,15 +230,32 @@ bool Json::getBool() const
     return std::get<bool>(value);
 }
 
-double Json::getNumber() const
+int64_t Json::getInt() const
 {
-    if (type() != Type::Number)
+    if (type() != Type::Int)
     {
-        auto fmt = "Can't call 'getNumber()' on a %s value: not a Number";
+        auto fmt = "Can't call 'getInt()' on a %s value: not a Int";
         throw TypeError(fmt, type());
     }
 
+    return std::get<int64_t>(value);
+}
+
+double Json::getDouble() const
+{
+    switch (type()) {
+    case Type::Null:
+    case Type::Bool:
+    case Type::String:
+    case Type::Array:
+    case Type::Object:
+        throw TypeError("Can't call 'detDouble()' on a %s value: must be Double or Int", type());
+    case Type::Int:
+        return static_cast<double>(std::get<int64_t>(value));
+    case Type::Double:
     return std::get<double>(value);
+}
+    assert(false); // function must return inside of switch statement
 }
 
 const std::string& Json::getString() const
@@ -257,7 +276,8 @@ size_t Json::size() const
     switch (type()) {
     case Type::Null:
     case Type::Bool:
-    case Type::Number:
+    case Type::Int:
+    case Type::Double:
         throw TypeError("Can't call 'size()' on a %s value", type());
     case Type::String:
         return std::get<std::string>(value).size();
@@ -316,7 +336,9 @@ Json::Value Json::copy(const Json& json)
         return nullptr;
     case Type::Bool:
         return std::get<bool>(json.value);
-    case Type::Number:
+    case Type::Int:
+        return std::get<int64_t>(json.value);
+    case Type::Double:
         return std::get<double>(json.value);
     case Type::String:
         return std::get<std::string>(json.value);
@@ -374,7 +396,8 @@ bool operator==(const Json& left, const Json& right)
     case Type::Null:
         return true;
     case Type::Bool:
-    case Type::Number:
+    case Type::Int:
+    case Type::Double:
     case Type::String:
         return left.value == right.value;
     case Type::Array:

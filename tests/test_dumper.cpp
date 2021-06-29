@@ -39,7 +39,7 @@ TEST_CASE("test json Dumper") {
         actual = json.toString(Json::Whitespace::NewlineAndTab);
         expected = "{"                 "\n"
                    "\t"  R"("a": 1,)"  "\n"
-                   "\t"  R"("b": 2,)"  "\n"
+                   "\t"  R"("b": 2)"   "\n"
                    "}";
         CHECK_EQ(expected, actual);
     }

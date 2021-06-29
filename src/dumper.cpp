@@ -18,7 +18,8 @@ std::string Dumper::dump(const Json &json)
     switch (json.type()) {
     case Type::Null:   return "null";
     case Type::Bool:   return json.getBool() ? "true" : "false";
-    case Type::Number: return std::to_string(json.getNumber());
+    case Type::Int:    return std::to_string(json.getInt());
+    case Type::Double: return std::to_string(json.getDouble());
     case Type::String: return dumpString(json);
     case Type::Array:  return dumpArray(json);
     case Type::Object: return dumpObject(json);

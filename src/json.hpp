@@ -1,6 +1,7 @@
 #ifndef EXPURPLE_JSON_JSON_HPP
 #define EXPURPLE_JSON_JSON_HPP
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
@@ -22,10 +23,11 @@ public:
     {
         Null = 0,
         Bool = 1,
-        Number = 2,
-        String = 3,
-        Array = 4,
-        Object = 5
+        Int = 2,
+        Double = 3,
+        String = 4,
+        Array = 5,
+        Object = 6
     };
 
     // Parsing options:
@@ -86,13 +88,20 @@ public:
     Json(const std::string& val);
     Json(std::string&& val) noexcept;
 
-    template<typename NumericT>
-    Json(NumericT val) noexcept
+    template<class T,
+             typename std::enable_if<std::is_integral<T>::value>::type* = nullptr,
+             typename std::enable_if<!std::is_same<T, bool>::value>::type* = nullptr
+             >
+    Json(T val) noexcept
+        : value(static_cast<int64_t>(val))
+    {}
+
+    template<class T,
+             typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr
+             >
+    Json(T val) noexcept
         : value(static_cast<double>(val))
-    {
-        static_assert(std::is_arithmetic<NumericT>::value,
-                      "This overload is for casting any numbers into double");
-    };
+    {}
 
     ~Json() noexcept = default;
 
@@ -131,7 +140,8 @@ public:
     const Json& at(size_t index) const;
 
     bool getBool() const;
-    double getNumber() const;
+    int64_t getInt() const;
+    double getDouble() const;
     const std::string& getString() const;
 
     Type type() const noexcept;
@@ -151,7 +161,8 @@ private:
     using JsonPtr = std::unique_ptr<Json>;
     using Array = std::vector<JsonPtr>;
     using Object = std::map<std::string, JsonPtr>;
-    using Value = std::variant <std::nullptr_t, bool, double, std::string, Array, Object>;
+    using Value = std::variant <std::nullptr_t, bool, int64_t, double,
+                                std::string, Array, Object>;
 
 // methods:
 

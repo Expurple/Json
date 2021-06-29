@@ -31,13 +31,13 @@ TEST_CASE("test Json class") {
     SUBCASE("test access methods") {
         SUBCASE("typed getters should work as expected") {
             CHECK_EQ(Json(false).getBool(), false);
-            CHECK_EQ(Json(0.5).getNumber(), 0.5);
+            CHECK_EQ(Json(0.5).getDouble(), 0.5);
             CHECK_EQ(Json("abc").getString(), "abc");
 
             SUBCASE("and fail when called on a wrong type of Json") {
                 CHECK_THROWS_AS(Json::null().getBool(), Json::TypeError);
                 CHECK_THROWS_AS(Json(4).getString(), Json::TypeError);
-                CHECK_THROWS_AS(Json("abcd").getNumber(), Json::TypeError);
+                CHECK_THROWS_AS(Json("abcd").getDouble(), Json::TypeError);
             }
         }
 
