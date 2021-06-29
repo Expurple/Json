@@ -33,12 +33,6 @@ Json::Json(Json&& other)
     value = std::move(other.value);
 }
 
-Json::Json(std::nullptr_t) noexcept
-    : value(nullptr)
-{
-
-}
-
 Json::Json(bool val) noexcept
     : value(val)
 {
@@ -125,6 +119,13 @@ const Json& Json::operator[](size_t index) const
     }
 
     return *std::get<Array>(value)[index];
+}
+
+Json Json::null()
+{
+    Json json;
+    json.value = nullptr;
+    return json;
 }
 
 Json Json::array()

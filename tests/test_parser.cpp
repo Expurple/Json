@@ -19,7 +19,7 @@ TEST_CASE("Parser constructor should throw if istream is in bad state") {
 TEST_CASE("test correct Json value parsing") {
     SUBCASE("test Null value") {
         SUBCASE("Json::parse() should create same Json as constructor") {
-            Json constructed(nullptr);
+            Json constructed = Json::null();
             Json parsed = Json::parse("null");
             CHECK_EQ(constructed, parsed);
         }

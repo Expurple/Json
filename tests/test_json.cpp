@@ -16,7 +16,7 @@ TEST_CASE("test Json class") {
         SUBCASE("different value types should never be equal") {
             CHECK_NE(Json(1), Json(true));
             CHECK_NE(Json(2), Json("2"));
-            CHECK_NE(Json(nullptr), Json(false));
+            CHECK_NE(Json::null(), Json(false));
             CHECK_NE(Json(0), Json::array());
             CHECK_NE(Json(), Json::array());
         }
@@ -35,7 +35,7 @@ TEST_CASE("test Json class") {
             CHECK_EQ(Json("abc").getString(), "abc");
 
             SUBCASE("and fail when called on a wrong type of Json") {
-                CHECK_THROWS_AS(Json(nullptr).getBool(), Json::TypeError);
+                CHECK_THROWS_AS(Json::null().getBool(), Json::TypeError);
                 CHECK_THROWS_AS(Json(4).getString(), Json::TypeError);
                 CHECK_THROWS_AS(Json("abcd").getNumber(), Json::TypeError);
             }
@@ -49,9 +49,8 @@ TEST_CASE("test Json class") {
     }
 
     SUBCASE("test observer methods") {
-        SUBCASE("isNull() should return true for Json constructed from null "
-                "and false for others (no type casting)") {
-            CHECK(      Json(nullptr).isNull());
+        SUBCASE("isNull() should return true only with Null value (no type casting)") {
+            CHECK(       Json::null().isNull());
             CHECK(Json::parse("null").isNull());
 
             CHECK_FALSE(  Json(false).isNull());
@@ -66,7 +65,7 @@ TEST_CASE("test Json class") {
             CHECK_EQ(Json::parse("{\"1\": 1, \"2\": 2}").size(), 2);
 
             SUBCASE("and fail with Null, Bool and Number values") {
-                CHECK_THROWS_AS(Json(nullptr).size(), Json::TypeError);
+                CHECK_THROWS_AS(Json::null().size(), Json::TypeError);
                 CHECK_THROWS_AS(Json(true).size(),    Json::TypeError);
                 CHECK_THROWS_AS(Json(15).size(),      Json::TypeError);
             }
@@ -76,7 +75,7 @@ TEST_CASE("test Json class") {
             std::set<std::string> expected = {"a", "b"};
             CHECK_EQ(expected, actual);
 
-            CHECK_THROWS_AS(Json(nullptr).keys(), Json::TypeError);
+            CHECK_THROWS_AS(Json::null().keys(),  Json::TypeError);
             CHECK_THROWS_AS(Json(true).keys(),    Json::TypeError);
             CHECK_THROWS_AS(Json(15).keys(),      Json::TypeError);
             CHECK_THROWS_AS(Json("ab").keys(),    Json::TypeError);

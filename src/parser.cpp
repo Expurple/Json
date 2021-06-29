@@ -65,7 +65,7 @@ Json Parser::parseValue()
 Json Parser::parseNull()
 {
     parseLiteral("null");
-    return Json(nullptr);
+    return Json::null();
 }
 
 Json Parser::parseBool()
