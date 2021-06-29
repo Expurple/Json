@@ -1,14 +1,18 @@
 #ifndef EXPURPLE_JSON_DUMPER_HPP
 #define EXPURPLE_JSON_DUMPER_HPP
 
+#include <unordered_map>
+
 #include "json.hpp"
 
 namespace expurple {
 
+// A temporary object for each call of Json::toString() or Json::operator<<,
+// holding some internal state while doing all the stringification work.
 class Dumper
 {
 public:
-    Dumper(Json::Whitespace whitespace) noexcept;
+    explicit Dumper(Json::Whitespace whitespace) noexcept;
     std::string dump(const Json& json);
 private:
     std::string dumpString(const Json& json);
@@ -22,6 +26,8 @@ private:
 // fields:
     const Json::Whitespace ws;
     size_t indentLevel;
+
+    static const std::unordered_map<char, char> escapeChars;
 };
 
 } // end of namespace "expurple"

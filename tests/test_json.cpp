@@ -83,4 +83,16 @@ TEST_CASE("test Json class") {
             CHECK_THROWS_AS(Json::array().keys(), Json::TypeError);
         }
     }
+
+    SUBCASE("test parsing and stringification") {
+        SUBCASE("should be able to stringify a Json and parse the same exact value back") {
+            // TODO: proper initialization, when there is any
+            Json original;
+            original["array"] = Json::parse("[1, 2, 3]");
+            original["flag"] = false;
+            std::string stringDump = original.toString();
+            Json copy = Json::parse(stringDump);
+            CHECK_EQ(original, copy);
+        }
+    }
 }

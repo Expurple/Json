@@ -10,6 +10,7 @@ It probably has bugs with encodings, escape characters, etc.
 
 * parsing from strings and `std::istream`s
     * optional errors on duplicate keys
+* stringification (compact or pretty)
 
 ## How to build
 

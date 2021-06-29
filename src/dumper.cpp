@@ -29,8 +29,19 @@ std::string Dumper::dump(const Json &json)
 
 std::string Dumper::dumpString(const Json& json)
 {
-    // TODO: deal with escape characters properly
-    return "\"" + json.getString() + "\"";
+    std::string result = "\"";
+    result.reserve(3ull + json.size() * 2ull);
+    for (char c : json.getString())
+    {
+        if (escapeChars.count(c) > 0)
+        {
+            result.push_back('\\');
+            c = escapeChars.at(c);
+        }
+        result.push_back(c);
+    }
+    result.push_back('\"');
+    return result;
 }
 
 std::string Dumper::dumpArray(const Json& json)
@@ -107,5 +118,15 @@ std::string Dumper::space() const
     }
     assert(false); // function must return inside of switch statement
 }
+
+const std::unordered_map<char, char> Dumper::escapeChars = {
+    {'\\', '\\'},
+    {'"',  '"'},
+    {'\b', 'b'},
+    {'\f', 'f'},
+    {'\n', 'n'},
+    {'\r', 'r'},
+    {'\t', 't'}
+};
 
 } // end of namespace "expurple"

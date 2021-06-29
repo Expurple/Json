@@ -31,10 +31,17 @@ TEST_CASE("test correct Json value parsing") {
             CHECK_EQ(constructed, parsed);
         }
     }
-    SUBCASE("test Number value") {
+    SUBCASE("test Int value") {
         SUBCASE("Json::parse() should create same Json as constructor") {
-            Json constructed("TODO");
-            Json parsed = Json::parse("\"TODO\"");
+            Json constructed = 3;
+            Json parsed = Json::parse("3");
+            CHECK_EQ(constructed, parsed);
+        }
+    }
+    SUBCASE("test Double value") {
+        SUBCASE("Json::parse() should create same Json as constructor") {
+            Json constructed = 0.2;
+            Json parsed = Json::parse("0.2");
             CHECK_EQ(constructed, parsed);
         }
     }

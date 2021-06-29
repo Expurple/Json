@@ -8,7 +8,7 @@ TEST_CASE("test json Dumper") {
     SUBCASE("strings should be escaped properly") {
         const Json json = "line 1"      "\n"
                           "\"line 2 in quotes\"";
-        std::string expected = "\\\"line 1\\n\\\"line 2 in quotes\\\"";
+        std::string expected = "\"line 1\\n\\\"line 2 in quotes\\\"\"";
         std::string actual = json.toString();
         CHECK_EQ(expected, actual);
     }

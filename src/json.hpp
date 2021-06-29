@@ -30,7 +30,7 @@ public:
         Object = 6
     };
 
-    // Parsing options:
+    // parse() options:
     enum class DuplicateKeys : unsigned char
     {
         Ignore,
@@ -42,7 +42,7 @@ public:
         Check
     };
 
-    // Dump options:
+    // toString() options:
     enum class Whitespace : unsigned char
     {
         None,
@@ -183,8 +183,6 @@ private:
 
 std::istream& operator>>(std::istream& istream, Json& json);
 std::ostream& operator<<(std::ostream& ostream, const Json& json);
-
-// todo: operator| overload
 
 } // end of namespace "expurple"
 
